@@ -40,8 +40,8 @@ async def signin(form_data: SignUpReq, db: AsyncSession = Depends(create_session
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/post", status_code=status.HTTP_201_CREATED)
-async def create_post(post_data: PostReq, db: AsyncSession = Depends(create_session)):
+@router.post("/post", status_code=status.HTTP_201_CREATED, dependencies=[Depends(authentication_admin_role)])
+async def create_post(post_data: dict, db: AsyncSession = Depends(create_session)):
     post = await create_post(db, post_data.title, post_data.content, post_data.author_id)
     if not post:
         raise HTTPException(
@@ -51,7 +51,7 @@ async def create_post(post_data: PostReq, db: AsyncSession = Depends(create_sess
     return {"message": "Post created successfully"}
 
 
-@router.get("/post", status_code=status.HTTP_200_OK)
+@router.get("/post", status_code=status.HTTP_200_OK, dependencies=[Depends(authentication_admin_role)])
 async def get_post(db: AsyncSession = Depends(create_session)):
     post = await get_post_by_id(db, post_id)
     if not post:
@@ -62,7 +62,7 @@ async def get_post(db: AsyncSession = Depends(create_session)):
     return post
 
 
-@router.delete("/post/{post_id}", status_code=status.HTTP_200_OK)
+@router.delete("/post/{post_id}", status_code=status.HTTP_200_OK, dependencies=[Depends(authentication_admin_role)])
 async def delete_post(post_id: int, db: AsyncSession = Depends(create_session)):
     post = await get_post_by_id(db, post_id)
     if not post:
