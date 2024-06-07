@@ -1,14 +1,12 @@
 import logging
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.requests import Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.depends import create_session
 from app.config import config
-from app.controllers.user import is_api_key_valid
-from jose import JWTError, jwt
+from jose import jwt
 from datetime import datetime, timedelta
+from passlib.context import CryptContext
 
 logger = logging.getLogger("__main__")
 
@@ -16,12 +14,19 @@ SECRET_KEY = config.SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-def create_access_token(data: dict):
+
+async def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def get_password_hash(password: str):
+    return pwd_context.hash(password)
+
 
 async def authenticate_basic(
     request: Request

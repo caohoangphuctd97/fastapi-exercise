@@ -9,8 +9,8 @@ DEFAULT_API_VERSION = "v1"
 
 
 class AsyncMySQLDsn(MySQLDsn):
-    default_scheme = "mysql+pymysql"
-    allowed_schemes = {"mysql+pymysql", "mysql+pymysql"}
+    default_scheme = "mysql+aiomysql"
+    allowed_schemes = {"mysql+aiomysql", "mysql+aiomysql"}
 
 
 class DatabaseServiceConfig(BaseSettings):
