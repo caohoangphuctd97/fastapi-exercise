@@ -1,0 +1,34 @@
+version: '3.5'
+
+services:
+  mysql:
+    container_name: mysql_container
+    image: mysql:8.0
+    environment:
+      MYSQL_USER: ${DATABASE_USERNAME}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+    volumes:
+      - data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+  
+  fastapi:
+    container_name: fastapi_container
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile
+    ports:
+      - "80:8080"
+    depends_on:
+      - mysql
+    environment:
+      - DATABASE_USERNAME
+      - DATABASE_NAME
+      - DATABASE_PASSWORD
+      - DATABASE_HOST
+    restart: unless-stopped
+
+volumes:
+  data:
+    driver: local
