@@ -16,3 +16,4 @@ Run code:
 ```bash
 dotenv run uvicorn app.main:app --reload
 ```
+Then Open http://127.0.0.1:8000/api/v1/docs

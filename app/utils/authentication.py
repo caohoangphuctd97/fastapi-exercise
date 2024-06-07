@@ -1,12 +1,17 @@
 import logging
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi.requests import Request
 from app.config import config
 from jose import jwt
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.controllers.user import get_user_by_email
+from app.database.depends import create_session
+from app.database.models import Users
 
 logger = logging.getLogger("__main__")
 
@@ -26,6 +31,11 @@ async def create_access_token(data: dict):
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def get_password_hash(password: str):
     return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str):
+    return pwd_context.verify(plain_password, hashed_password)
+
 
 
 async def authenticate_basic(
@@ -48,17 +58,25 @@ async def authenticate_basic(
     )
 
 
-class AuthenticationAdminRole(HTTPBearer):
+class AuthenticationRole(HTTPBearer):
     async def __call__(
-        self, request: Request
-    ) -> HTTPAuthorizationCredentials:
+        self, request: Request, db: AsyncSession = Depends(create_session)
+    ) -> Users:
         credential: HTTPAuthorizationCredentials = (
             await authenticate_basic(request)
         )
-        if credential.credentials == config.ADMIN_API_KEY:
-            return credential
-        else:
+        try:
+            payload = jwt.decode(credential.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+            user = await get_user_by_email(db, payload.get('sub'))
+            if user:
+                return user
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="InvalidUser"
+                )
+        except jwt.JWTError:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="InvalidAPIKey"
+                detail="InvalidToken"
             )

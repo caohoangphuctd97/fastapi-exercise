@@ -15,7 +15,7 @@ config = context.config
 
 config.set_main_option(
     "sqlalchemy.url",
-    f"mysql+aiomysql://{app.config.config.db.DATABASE_USERNAME}:{app.config.config.db.DATABASE_PASSWORD}"
+    f"mysql+pymysql://{app.config.config.db.DATABASE_USERNAME}:{app.config.config.db.DATABASE_PASSWORD}"
     f"@{app.config.config.db.DATABASE_HOST}:3306/{app.config.config.db.DATABASE_NAME}"
 )
 

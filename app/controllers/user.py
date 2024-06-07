@@ -13,9 +13,6 @@ from app.exceptions.configure_exceptions import UserExisted
 logger = logging.getLogger("__main__")
 
 
-from sqlalchemy.exc import NoResultFound
-from app.utils.authentication import get_password_hash
-
 async def create_user(db: AsyncSession, email: str, password: str) -> UserSchema:
     user = await db.execute(select(Users).where(Users.email == email))
     user = user.scalars().first()
@@ -23,9 +20,8 @@ async def create_user(db: AsyncSession, email: str, password: str) -> UserSchema
         raise UserExisted()
 
     new_user = Users(
-        id=uuid.uuid4(),
         email=email,
-        password=get_password_hash(password),
+        password=password,
         created_at=datetime.datetime.now(),
         modified_at=datetime.datetime.now()
     )
@@ -36,4 +32,8 @@ async def create_user(db: AsyncSession, email: str, password: str) -> UserSchema
 
     return new_user
 
+
+async def get_user_by_email(db: AsyncSession, email: str) -> UserSchema:
+    user = await db.execute(select(Users).where(Users.email == email))
+    return user.scalars().first()
 
